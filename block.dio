@@ -1,35 +1,50 @@
 <mxfile host="65bd71144e">
     <diagram id="uPqJtkSqy7r8Snaclcfi" name="Page-1">
-        <mxGraphModel dx="490" dy="494" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
+        <mxGraphModel dx="700" dy="736" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
             <root>
                 <mxCell id="0"/>
                 <mxCell id="1" parent="0"/>
-                <mxCell id="2" value="ESP32" style="rounded=1;whiteSpace=wrap;html=1;rotation=90;" vertex="1" parent="1">
-                    <mxGeometry x="165" y="205" width="170" height="60" as="geometry"/>
-                </mxCell>
-                <mxCell id="6" value="" style="edgeStyle=none;html=1;" edge="1" parent="1" source="3" target="2">
+                <mxCell id="20" value="" style="edgeStyle=none;html=1;shape=flexArrow;" edge="1" parent="1" source="18" target="19">
                     <mxGeometry relative="1" as="geometry"/>
                 </mxCell>
-                <mxCell id="3" value="HC-SR04 Sensor" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
-                    <mxGeometry x="45" y="220" width="120" height="60" as="geometry"/>
+                <mxCell id="18" value="Solar PAnel" style="ellipse;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+                    <mxGeometry x="90" y="130" width="120" height="80" as="geometry"/>
                 </mxCell>
-                <mxCell id="5" value="" style="edgeStyle=none;html=1;" edge="1" parent="1" source="4" target="2">
+                <mxCell id="22" value="" style="edgeStyle=none;shape=flexArrow;html=1;fillColor=default;" edge="1" parent="1" source="19" target="21">
                     <mxGeometry relative="1" as="geometry"/>
                 </mxCell>
-                <mxCell id="4" value="GPS Module" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
-                    <mxGeometry x="45" y="120" width="120" height="60" as="geometry"/>
-                </mxCell>
-                <mxCell id="8" value="" style="edgeStyle=none;html=1;" edge="1" parent="1" source="7" target="2">
+                <mxCell id="26" value="" style="edgeStyle=none;shape=flexArrow;html=1;fillColor=default;" edge="1" parent="1" source="19" target="25">
                     <mxGeometry relative="1" as="geometry"/>
                 </mxCell>
-                <mxCell id="7" value="Motor driver" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
-                    <mxGeometry x="45" y="320" width="120" height="60" as="geometry"/>
+                <mxCell id="19" value="BMS / Charger control" style="ellipse;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+                    <mxGeometry x="260" y="130" width="120" height="80" as="geometry"/>
                 </mxCell>
-                <mxCell id="10" value="" style="edgeStyle=none;html=1;" edge="1" parent="1" source="9" target="2">
+                <mxCell id="31" value="" style="edgeStyle=none;shape=flexArrow;html=1;fillColor=default;" edge="1" parent="1" source="21" target="29">
                     <mxGeometry relative="1" as="geometry"/>
                 </mxCell>
-                <mxCell id="9" value="Charger" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
-                    <mxGeometry x="335" y="120" width="120" height="60" as="geometry"/>
+                <mxCell id="21" value="Battery" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=15;" vertex="1" parent="1">
+                    <mxGeometry x="290" y="270" width="60" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="30" value="" style="edgeStyle=none;shape=flexArrow;html=1;fillColor=default;" edge="1" parent="1" source="25" target="29">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="25" value="ESP32" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+                    <mxGeometry x="425" y="140" width="120" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="28" value="" style="edgeStyle=none;shape=flexArrow;html=1;fillColor=default;" edge="1" parent="1" source="27" target="25">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="27" value="GPS sensor" style="shape=dataStorage;whiteSpace=wrap;html=1;fixedSize=1;" vertex="1" parent="1">
+                    <mxGeometry x="590" y="130" width="100" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="33" value="" style="edgeStyle=none;shape=flexArrow;html=1;fillColor=default;" edge="1" parent="1" source="29" target="32">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="29" value="Motor Driver" style="shape=process;whiteSpace=wrap;html=1;backgroundOutline=1;" vertex="1" parent="1">
+                    <mxGeometry x="425" y="280" width="120" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="32" value="Motor" style="verticalLabelPosition=middle;shadow=0;dashed=0;align=center;html=1;verticalAlign=middle;strokeWidth=1;shape=ellipse;fontSize=32;perimeter=ellipsePerimeter;" vertex="1" parent="1">
+                    <mxGeometry x="610" y="260" width="100" height="100" as="geometry"/>
                 </mxCell>
             </root>
         </mxGraphModel>
