@@ -1,0 +1,112 @@
+from machine import Pin, PWM
+import time
+import network
+import socket
+import camera
+
+# Wi-Fi credentials
+SSID = 'bps_wifi'
+PASSWORD = 'sagabps@235'
+
+# Motor pins
+IN1 = Pin(14, Pin.OUT)
+IN2 = Pin(15, Pin.OUT)
+ENA = PWM(Pin(2), freq=1000)
+
+# Motor control functions
+def motor_forward(speed):
+    IN1.on()
+    IN2.off()
+    ENA.duty(speed)
+
+def motor_backward(speed):
+    IN1.off()
+    IN2.on()
+    ENA.duty(speed)
+
+def motor_stop():
+    IN1.off()
+    IN2.off()
+    ENA.duty(0)
+
+# Connect to Wi-Fi
+def connect_wifi():
+    wlan = network.WLAN(network.STA_IF)
+    wlan.active(True)
+    wlan.connect(SSID, PASSWORD)
+    print('Connecting to Wi-Fi...')
+    while not wlan.isconnected():
+        time.sleep(1)
+    print('Wi-Fi connected. IP:', wlan.ifconfig()[0])
+    return wlan.ifconfig()[0]
+
+# Initialize camera
+def init_camera():
+    try:
+        camera.init(0, format=camera.JPEG, framesize=camera.FRAMESIZE_VGA)
+        print("Camera initialized")
+    except Exception as e:
+        print("Camera init failed:", e)
+
+# HTML for web interface
+def web_page():
+    html = """<html>
+    <head><title>ESP32-CAM Stream</title></head>
+    <body>
+    <h1>ESP32-CAM Video Stream</h1>
+    <img src="stream" style="width:640px;height:480px;">
+    <p>
+    <a href="/?motor=forward"><button>Forward</button></a>
+    <a href="/?motor=backward"><button>Backward</button></a>
+    <a href="/?motor=stop"><button>Stop</button></a>
+    </p>
+    </body></html>"""
+    return html
+
+# Web server
+def start_server():
+    ip = connect_wifi()
+    init_camera()
+    addr = socket.getaddrinfo('0.0.0.0', 80)[0][-1]
+    s = socket.socket()
+    s.bind(addr)
+    s.listen(1)
+    print('Web server started at http://' + ip)
+
+    while True:
+        try:
+            conn, addr = s.accept()
+            request = conn.recv(1024).decode()
+            if 'GET /stream' in request:
+                conn.send('HTTP/1.1 200 OK\r\nContent-Type: multipart/x-mixed-replace; boundary=frame\r\n\r\n')
+                while True:
+                    buf = camera.capture()
+                    if buf:
+                        conn.send(b'--frame\r\nContent-Type: image/jpeg\r\n\r\n' + buf + b'\r\n')
+                    else:
+                        break
+                    time.sleep(0.1)
+            else:
+                # Handle motor control
+                if 'motor=forward' in request:
+                    motor_forward(512)
+                elif 'motor=backward' in request:
+                    motor_backward(512)
+                elif 'motor=stop' in request:
+                    motor_stop()
+                # Serve webpage
+                conn.send('HTTP/1.1 200 OK\r\nContent-Type: text/html\r\n\r\n')
+                conn.send(web_page())
+            conn.close()
+        except Exception as e:
+            print('Server error:', e)
+            conn.close()
+
+# Main program
+try:
+    start_server()
+except KeyboardInterrupt:
+    motor_stop()
+    ENA.deinit()
+    camera.deinit()
+    print('Program stopped')

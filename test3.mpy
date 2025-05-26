@@ -1,0 +1,273 @@
+try:
+    import usocket as socket
+except:
+    import socket
+from machine import Pin, PWM
+import camera as cam
+from utime import sleep_ms, sleep
+import network
+import gc
+
+# Wi-Fi credentials
+SSID = 'bps_wifi'
+PASSWORD = 'sagabps@235'
+
+# Initialize socket early to avoid 'so' undefined error
+so = None
+
+# Initialize LED and motor pins
+led = PWM(Pin(4), freq=1000)
+led.duty(0)
+IN1 = Pin(14, Pin.OUT)
+IN2 = Pin(15, Pin.OUT)
+ENA = PWM(Pin(2), freq=1000)
+
+# Motor control functions
+def motor_forward(speed):
+    IN1.on()
+    IN2.off()
+    ENA.duty(speed)
+    print("Motor forward, speed:", speed)
+
+def motor_backward(speed):
+    IN1.off()
+    IN2.on()
+    ENA.duty(speed)
+    print("Motor backward, speed:", speed)
+
+def motor_stop():
+    IN1.off()
+    IN2.off()
+    ENA.duty(0)
+    print("Motor stopped")
+
+# Initialize camera
+try:
+    cam.init(0, format=cam.JPEG, framesize=5)
+    print("Camera initialized with QVGA")
+except Exception as e:
+    print("Camera init failed:", e)
+    try:
+        cam.init(0, format=cam.JPEG)
+        print("Camera initialized with default framesize")
+    except Exception as e:
+        print("Camera init failed completely:", e)
+
+# Connect to Wi-Fi
+sta = network.WLAN(network.STA_IF)
+sta.active(True)
+sta.connect(SSID, PASSWORD)
+
+while not sta.isconnected():
+    sleep(1)
+    print("Connecting to Wi-Fi...")
+
+if sta.isconnected():
+    print("Connection status:", sta.isconnected())
+
+# Set static IP
+sta.ifconfig(('192.168.1.23', '255.255.255.0', '192.168.1.1', '218.248.112.65'))
+print('Web server: http://192.168.1.23')
+
+def web_page():
+    html = """<!DOCTYPE html>
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+    <style>
+    .arrows {
+      font-size:40px;
+      color:red;
+    }
+    td.button {
+      background-color:black;
+      border-radius:25%;
+      box-shadow: 5px 5px #888888;
+    }
+    td.button:active {
+      transform: translate(5px,5px);
+      box-shadow: none; 
+    }
+    .noselect {
+      -webkit-touch-callout: none;
+      -webkit-user-select: none;
+      -khtml-user-select: none;
+      -moz-user-select: none;
+      -ms-user-select: none;
+      user-select: none;
+    }
+    .slidecontainer {
+      width: 100%;
+    }
+    .slider {
+      -webkit-appearance: none;
+      width: 100%;
+      height: 15px;
+      border-radius: 5px;
+      background: #d3d3d3;
+      outline: none;
+      opacity: 0.7;
+      -webkit-transition: .2s;
+      transition: opacity .2s;
+    }
+    .slider:hover {
+      opacity: 1;
+    }
+    .slider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 25px;
+      height: 25px;
+      border-radius: 50%;
+      background: red;
+      cursor: pointer;
+    }
+    .slider::-moz-range-thumb {
+      width: 25px;
+      height: 25px;
+      border-radius: 50%;
+      background: red;
+      cursor: pointer;
+    }
+    </style>
+  </head>
+  <body class="noselect" align="center" style="background-color:white">
+    <table id="mainTable" style="width:400px;margin:auto;table-layout:fixed" CELLSPACING=10>
+      <tr>
+        <img id="cameraImage" src="/stream" style="width:400px;height:250px"></td>
+      </tr> 
+      <tr>
+        <td></td>
+        <td class="button"><a href="/move?dir=1"><span class="arrows">⇧</span></a></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td class="button"><a href="/move?dir=3"><span class="arrows">⇦</span></a></td>
+        <td class="button"></td>    
+        <td class="button"><a href="/move?dir=4"><span class="arrows">⇨</span></a></td>
+      </tr>
+      <tr>
+        <td></td>
+        <td class="button"><a href="/move?dir=2"><span class="arrows">⇩</span></a></td>
+        <td></td>
+      </tr>
+      <tr/><tr/>
+      <tr>
+        <td style="text-align:left"><b>Speed:</b></td>
+        <td colspan=2>
+         <div class="slidecontainer">
+            <input type="range" min="0" max="1023" value="512" class="slider" id="Speed" oninput='updateSlider("speed", this.value)'>
+          </div>
+        </td>
+      </tr>        
+      <tr>
+        <td style="text-align:left"><b>Light:</b></td>
+        <td colspan=2>
+          <div class="slidecontainer">
+            <input type="range" min="0" max="1023" value="0" class="slider" id="Light" oninput='updateSlider("light", this.value)'>
+          </div>
+        </td>   
+      </tr>
+    </table>
+    <script>
+      function updateSlider(key, value) {
+        var xhr = new XMLHttpRequest();
+        xhr.open("GET", "/" + key + "?value=" + value, true);
+        xhr.send();
+      }
+    </script>
+  </body>    
+</html>
+"""
+    return html
+
+current_speed = 512  # Default motor speed
+
+try:
+    while True:
+        conn, addr = so.accept()
+        conn.settimeout(3.0)
+        print('Got a connection from %s' % str(addr))
+        request = conn.recv(1024)
+        conn.settimeout(None)
+        request = str(request)
+        print('Content = %s' % request)
+
+        # Handle motor controls
+        if '/move?dir=' in request:
+            dir_start = request.find('/move?dir=') + 10
+            dir_end = request.find(' ', dir_start)
+            dir_value = int(request[dir_start:dir_end])
+            if dir_value == 1:
+                motor_forward(current_speed)
+            elif dir_value == 2:
+                motor_backward(current_speed)
+            elif dir_value in (3, 4):
+                motor_stop()
+            elif dir_value == 0:
+                motor_stop()
+            response = web_page()
+            conn.send('HTTP/1.1 200 OK\r\n')
+            conn.send('Content-Type: text/html\r\n')
+            conn.send('Connection: close\r\n\r\n')
+            conn.sendall(response)
+        # Handle speed slider
+        elif '/speed?value=' in request:
+            value_start = request.find('/speed?value=') + 13
+            value_end = request.find(' ', value_start)
+            current_speed = min(max(int(request[value_start:value_end]), 0), 1023)
+            print("Speed set to:", current_speed)
+            response = web_page()
+            conn.send('HTTP/1.1 200 OK\r\n')
+            conn.send('Content-Type: text/html\r\n')
+            conn.send('Connection: close\r\n\r\n')
+            conn.sendall(response)
+        # Handle light slider
+        elif '/light?value=' in request:
+            value_start = request.find('/light?value=') + 13
+            value_end = request.find(' ', value_start)
+            led.duty(min(max(int(request[value_start:value_end]), 0), 1023))
+            print("LED brightness set to:", request[value_start:value_end])
+            response = web_page()
+            conn.send('HTTP/1.1 200 OK\r\n')
+            conn.send('Content-Type: text/html\r\n')
+            conn.send('Connection: close\r\n\r\n')
+            conn.sendall(response)
+        # Handle streaming
+        elif '/stream' in request:
+            conn.send('HTTP/1.1 200 OK\r\n')
+            conn.send('Content-Type: multipart/x-mixed-replace; boundary=frame\r\n\r\n')
+            try:
+                while True:
+                    img = cam.capture()
+                    if img:
+                        conn.send(b'--frame\r\n')
+                        conn.send(b'Content-Type: image/jpeg\r\n\r\n' + img + b'\r\n')
+                    sleep_ms(100)
+            except OSError as e:
+                conn.close()
+                print('Stream connection closed:', e)
+        # Serve webpage
+        else:
+            response = web_page()
+            conn.send('HTTP/1.1 200 OK\r\n')
+            conn.send('Content-Type: text/html\r\n')
+            conn.send('Connection: close\r\n\r\n')
+            conn.sendall(response)
+
+        conn.close()
+        sleep_ms(10)
+except KeyboardInterrupt:
+    led.duty(0)
+    motor_stop()
+    ENA.deinit()
+    cam.deinit()
+    so.close()
+    print('Program stopped')
+except Exception as e:
+    print('Error:', e)
+    led.duty(0)
+    motor_stop()
+    ENA.deinit()
+    cam.deinit()
+    so.close()
