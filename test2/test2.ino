@@ -9,8 +9,8 @@
 #include "esp_http_server.h"
 
 // Replace with your network credentials
-const char* ssid = "bps_wifi";
-const char* password = "sagabps@235";
+const char* ssid = "RedmiNoteten";
+const char* password = "priya13#";
 
 #define PART_BOUNDARY "123456789000000000000987654321"
 
@@ -166,12 +166,12 @@ static const char PROGMEM INDEX_HTML[] = R"rawliteral(
   <table>
     <tr>
       <td colspan="3" align="center">
-        <button class="button" onmousedown="toggleCheckbox('forward');" ontouchstart="toggleCheckbox('forward');" onmouseup="toggleCheckbox('stop');" ontouchend="toggleCheckbox('stop');">Forward</button>
+        <button class="button" onmousedown="toggleCheckbox('forward');" ontouchstart="toggleCheckbox('forward');" onmouseup="toggleCheckbox('stop');" ontouchend="toggleCheckbox('stop');">stop</button>
       </td>
     </tr>
     <tr>
       <td align="center"><button class="button" onmousedown="toggleCheckbox('left');" ontouchstart="toggleCheckbox('left');" onmouseup="toggleCheckbox('stop');" ontouchend="toggleCheckbox('stop');">Left</button></td>
-      <td align="center"><button class="button" onmousedown="toggleCheckbox('stop');" ontouchstart="toggleCheckbox('stop');">Stop</button></td>
+      <td align="center"><button class="button" onmousedown="toggleCheckbox('stop');" ontouchstart="toggleCheckbox('stop');">Forward</button></td>
       <td align="center"><button class="button" onmousedown="toggleCheckbox('right');" ontouchstart="toggleCheckbox('right');" onmouseup="toggleCheckbox('stop');" ontouchend="toggleCheckbox('stop');">Right</button></td>
     </tr>
     <tr>
